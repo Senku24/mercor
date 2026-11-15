@@ -24,13 +24,11 @@ app.post("/api/pre-interview", async (req, res) => {
 
     try {
         const repositories = await scrapeGithubRepos(githubUsername);
-        return res.json({ githubUsername, repositories });
         const interview = await db.orm.public.Interview.create({
             githubMetaData: repositories,
             status: "Pre" 
         });
         return res.json({ githubUsername,id: interview.id });
-        console.log("GitHub repositories:", repositories);
     } catch (error) {
         console.error("GitHub profile lookup failed:", error);
         return res.status(502).json({ error: "Unable to fetch GitHub repositories" });
