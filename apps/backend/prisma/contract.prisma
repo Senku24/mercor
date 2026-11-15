@@ -2,18 +2,25 @@
 
 
 model Interview {
-  id              String    @id @onCreate(uuid()) 
+  id              String    @id @onCreate(uuid())
   githubMetaData  Json
+  accessToken     String
+  clientSecretIssued Boolean @default(false)
+  callId          String?
   status          InterviewStatus
-  score           Int       @default(0)
+  score           Int?
+  feedback        String?
+  createdAt       DateTime  @default(now())
+  startedAt       DateTime?
   conversations   Message[]
 }
 
 model Message {
-  id              String    @id @onCreate(uuid()) 
+  id              String    @id @onCreate(uuid())
   message         String
   type            MessageType
   interviewId     String
+  createdAt       DateTime  @default(now())
   interview       Interview  @relation(fields: [interviewId] , references: [id])
 }
 

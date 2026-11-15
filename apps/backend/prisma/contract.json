@@ -51,6 +51,44 @@
         "models": {
           "Interview": {
             "fields": {
+              "accessToken": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "callId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "clientSecretIssued": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "feedback": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "githubMetaData": {
                 "nullable": false,
                 "type": {
@@ -66,10 +104,20 @@
                 }
               },
               "score": {
-                "nullable": false,
+                "nullable": true,
                 "type": {
                   "codecId": "pg/int4@1",
                   "kind": "scalar"
+                }
+              },
+              "startedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
                 }
               },
               "status": {
@@ -105,6 +153,21 @@
             },
             "storage": {
               "fields": {
+                "accessToken": {
+                  "column": "accessToken"
+                },
+                "callId": {
+                  "column": "callId"
+                },
+                "clientSecretIssued": {
+                  "column": "clientSecretIssued"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "feedback": {
+                  "column": "feedback"
+                },
                 "githubMetaData": {
                   "column": "githubMetaData"
                 },
@@ -113,6 +176,9 @@
                 },
                 "score": {
                   "column": "score"
+                },
+                "startedAt": {
+                  "column": "startedAt"
                 },
                 "status": {
                   "column": "status"
@@ -124,6 +190,16 @@
           },
           "Message": {
             "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -179,6 +255,9 @@
             },
             "storage": {
               "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
                 "id": {
                   "column": "id"
                 },
@@ -214,6 +293,42 @@
                 }
               ],
               "columns": {
+                "accessToken": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "callId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "clientSecretIssued": {
+                  "codecId": "pg/bool@1",
+                  "dataType": "pg/bool",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
+                "feedback": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
                 "githubMetaData": {
                   "codecId": "pg/json@1",
                   "dataType": "pg/json",
@@ -227,11 +342,15 @@
                 "score": {
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
-                  "default": {
-                    "kind": "literal",
-                    "value": 0
-                  },
-                  "nullable": false
+                  "nullable": true
+                },
+                "startedAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true,
+                  "typeParams": {
+                    "precision": 3
+                  }
                 },
                 "status": {
                   "codecId": "pg/text@1",
@@ -263,6 +382,18 @@
                 }
               ],
               "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
                 "id": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
@@ -351,7 +482,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "d6bf1a9fbff9ca91959531c596977dfb3355b77c7c4a90c5d5b0e8d21f0f4164"
+    "storageHash": "46f7004a7c480a4c602dac4bd7d727fb1f92e65be2c8a8b4440ab85d714d69cb"
   },
   "execution": {
     "executionHash": "7bc0678f8ce6332a8465df6328d67513dbcc77aab302056a90c22e2e979a22ee",

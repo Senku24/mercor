@@ -49,9 +49,11 @@ If you use a framework like Next.js or Vite, the Prisma ORM plugin will do this 
 [`prisma.config.ts`](prisma.config.ts) tells the CLI where your contract lives and how to connect to your database. It loads environment variables from `.env` automatically:
 
 ```typescript
-import 'dotenv/config';
 import { definePrismaConfig } from '@prisma/cli-engine';
 import { defineConfig as ormConfig } from '@prisma/orm-postgres/config';
+import { existsSync } from 'node:fs';
+
+if (existsSync('.env')) process.loadEnvFile();
 
 export default definePrismaConfig({
   orm: ormConfig({
@@ -69,7 +71,7 @@ Notice the `DATABASE_URL` above? It's defined in your [`.env`](./.env) file:
 DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
 ```
 
-You can customize how your environment variables are loaded by changing or removing the `import 'dotenv/config'` line.
+The Prisma CLI config uses Node's built-in `.env` loader; Bun also loads `.env` automatically when it starts the backend.
 
 ## Quick reference
 

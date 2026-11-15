@@ -23,7 +23,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'d6bf1a9fbff9ca91959531c596977dfb3355b77c7c4a90c5d5b0e8d21f0f4164'>;
+  StorageHashBase<'46f7004a7c480a4c602dac4bd7d727fb1f92e65be2c8a8b4440ab85d714d69cb'>;
 export type ExecutionHash =
   ExecutionHashBase<'7bc0678f8ce6332a8465df6328d67513dbcc77aab302056a90c22e2e979a22ee'>;
 export type ProfileHash =
@@ -342,14 +342,21 @@ export type StorageColumnInputTypes = ColumnTypesFromStorage<
 
 export namespace Models {
   export type public_Interview = {
+    accessToken: FieldOutputTypes['public']['Interview']['accessToken'];
+    callId: FieldOutputTypes['public']['Interview']['callId'];
+    clientSecretIssued: FieldOutputTypes['public']['Interview']['clientSecretIssued'];
+    createdAt: FieldOutputTypes['public']['Interview']['createdAt'];
+    feedback: FieldOutputTypes['public']['Interview']['feedback'];
     githubMetaData: FieldOutputTypes['public']['Interview']['githubMetaData'];
     id: FieldOutputTypes['public']['Interview']['id'];
     score: FieldOutputTypes['public']['Interview']['score'];
+    startedAt: FieldOutputTypes['public']['Interview']['startedAt'];
     status: FieldOutputTypes['public']['Interview']['status'];
     conversations: public_Message[];
     readonly [RelationKeys]?: 'conversations';
   };
   export type public_Message = {
+    createdAt: FieldOutputTypes['public']['Message']['createdAt'];
     id: FieldOutputTypes['public']['Message']['id'];
     interviewId: FieldOutputTypes['public']['Message']['interviewId'];
     message: FieldOutputTypes['public']['Message']['message'];
@@ -386,6 +393,42 @@ type ContractBase = Omit<
           readonly table: {
             readonly Interview: {
               columns: {
+                readonly accessToken: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly callId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly clientSecretIssued: {
+                  readonly dataType: 'pg/bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly feedback: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly githubMetaData: {
                   readonly dataType: 'pg/json';
                   readonly codecId: 'pg/json@1';
@@ -401,11 +444,14 @@ type ContractBase = Omit<
                 readonly score: {
                   readonly dataType: 'pg/int4';
                   readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
-                  };
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly startedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly precision: 3 };
                   readonly many: false;
                 };
                 readonly status: {
@@ -422,6 +468,14 @@ type ContractBase = Omit<
             };
             readonly Message: {
               columns: {
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
                 readonly id: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
@@ -502,6 +556,30 @@ type ContractBase = Omit<
         readonly models: {
           readonly Interview: {
             readonly fields: {
+              readonly accessToken: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly callId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly clientSecretIssued: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly feedback: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly githubMetaData: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/json@1' };
@@ -511,8 +589,16 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
               readonly score: {
-                readonly nullable: false;
+                readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly startedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
               };
               readonly status: {
                 readonly nullable: false;
@@ -536,15 +622,29 @@ type ContractBase = Omit<
               readonly table: 'Interview';
               readonly namespaceId: 'public';
               readonly fields: {
+                readonly accessToken: { readonly column: 'accessToken' };
+                readonly callId: { readonly column: 'callId' };
+                readonly clientSecretIssued: { readonly column: 'clientSecretIssued' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly feedback: { readonly column: 'feedback' };
                 readonly githubMetaData: { readonly column: 'githubMetaData' };
                 readonly id: { readonly column: 'id' };
                 readonly score: { readonly column: 'score' };
+                readonly startedAt: { readonly column: 'startedAt' };
                 readonly status: { readonly column: 'status' };
               };
             };
           };
           readonly Message: {
             readonly fields: {
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
               readonly id: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -580,6 +680,7 @@ type ContractBase = Omit<
               readonly table: 'Message';
               readonly namespaceId: 'public';
               readonly fields: {
+                readonly createdAt: { readonly column: 'createdAt' };
                 readonly id: { readonly column: 'id' };
                 readonly interviewId: { readonly column: 'interviewId' };
                 readonly message: { readonly column: 'message' };
