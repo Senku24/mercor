@@ -9,15 +9,19 @@ import { BACKEND_URL } from "../lib/config";
 export function Form() {
 
     const [github, setGithub] = useState("");
-    const [linkedin, setLinkedin] = useState("");
 
     async function OnSubmit() {
-         if(!github || !linkedin) {
-            toast.error("Please give valid Github and Linkedin URLs");
+         if(!github) {
+            toast.error("Please provide a GitHub URL");
             return;
          }
-         toast.success("Starting interview...");
-         await axios.post( `${BACKEND_URL}/api/pre-interview`, { github, linkedin } );
+         try {
+            const { data } = await axios.post(`${BACKEND_URL}/api/pre-interview`, { github });
+            toast.success("GitHub profile loaded");
+            console.log("GitHub repositories:", data.repositories);
+         } catch {
+            toast.error("Could not load that GitHub profile");
+         }
     }
 
     return (
@@ -28,8 +32,6 @@ export function Form() {
             AI Interview Bot Kickstarter
           </h2>
         </div>
-        <div className ="p-3">
-          <Input placeholder="Linkdin URL" onChange = { e => setLinkedin(e.target.value)} /></div>
         <div className ="p-3">
           <Input placeholder="Github URL" onChange = { e => setGithub(e.target.value)} /></div>
         <div className ="flex justify-center p-3">

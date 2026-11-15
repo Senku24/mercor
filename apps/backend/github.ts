@@ -1,22 +1,22 @@
-import axios, { Axios } from "axios";
+import axios from "axios";
 
-
+type GithubRepository = {
+    description: string | null;
+    name: string;
+    full_name: string;
+    stargazers_count: number;
+};
 
 export async function scrapeGithubRepos(githubUsername: string) {
-
-    const userRepos = await axios.get(`https://api.github.com/users/${githubUsername}/repos`, {
-
-        proxy: {
-            host: "";
-            port: number;
-            auth? :  AxiosBasicCredentials;
-            protocol? : http;
-        },
+    const { data } = await axios.get<GithubRepository[]>(`https://api.github.com/users/${encodeURIComponent(githubUsername)}/repos`, {
+        params: { per_page: 100, sort: "updated" },
+        headers: { Accept: "application/vnd.github+json" },
     });
-        const filteredUserRepos = userRepos.data.map((x: any)=> ({
-            description : x.description,
-            name : x.name,
-            fullName : x.full_name,
-            starCount : x.stargazers_count
-        }));
-    }
+
+    return data.map(({ description, name, full_name, stargazers_count }) => ({
+        description,
+        name,
+        fullName: full_name,
+        starCount: stargazers_count,
+    }));
+}
