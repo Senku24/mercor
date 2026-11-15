@@ -4,11 +4,13 @@ import { useState } from "react";
 import { toast } from "sonner";
 import axios from "axios";
 import { BACKEND_URL } from "../lib/config";
+import { useNavigate } from "react-router";
 
 
 export function Form() {
 
     const [github, setGithub] = useState("");
+    const navigate = useNavigate();
 
     async function OnSubmit() {
          if(!github) {
@@ -18,7 +20,8 @@ export function Form() {
          try {
             const { data } = await axios.post(`${BACKEND_URL}/api/pre-interview`, { github });
             toast.success("GitHub profile loaded");
-            console.log("GitHub repositories:", data.repositories);
+            //console.log("GitHub repositories:", data.repositories);
+            navigate(`/interview/${data.id}`);
          } catch {
             toast.error("Could not load that GitHub profile");
          }

@@ -4,16 +4,34 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@prisma/cli-engine": "0.9.0",
+    "@types/bun": "latest",
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^7.0.2"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "@prisma/orm-postgres": "^8.0.0-rc.23",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "axios": "^1.21.1",
     "cors": "^2.8.6",
-    "express": "^5.3.0"
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "pg": "^8.23.1",
+    "prisma": "^8.0.0-rc.33"
+  },
+  "scripts": {
+    "dev": "bun --watch index.ts",
+    "start": "bun index.ts",
+    "contract:emit": "prisma contract emit",
+    "migration:plan": "prisma migration plan",
+    "migration:apply": "prisma db migrate",
+    "migration:status": "prisma migration status",
+    "db:verify": "prisma db verify"
   }
 }
