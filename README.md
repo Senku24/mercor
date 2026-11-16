@@ -6,11 +6,14 @@ A voice-based technical interview practice app that uses a candidate’s public 
 
 ![**Landing page screenshot placeholder**](image.png)
 
-> **Interview page screenshot placeholder**  
-> Add `docs/screenshots/interview.png` here.
+<img width="1920" height="993" alt="Screenshot 2026-11-16 at 4 53 08 PM" src="https://github.com/user-attachments/assets/f0c651b3-50c1-4196-bb48-b7b1e542fea6" />
 
-> **Results page screenshot placeholder**  
-> Add `docs/screenshots/results.png` here.
+<img width="1880" height="911" alt="Screenshot 2026-11-16 at 4 54 09 PM" src="https://github.com/user-attachments/assets/9af1b534-7a0e-431d-88a5-d6657c941f2b" />
+
+<img width="1815" height="883" alt="Screenshot 2026-11-16 at 4 55 27 PM" src="https://github.com/user-attachments/assets/fe2aac4b-bc0b-4e4e-816a-11fd8e615749" />
+
+<img width="1713" height="585" alt="Screenshot 2026-11-16 at 4 56 13 PM" src="https://github.com/user-attachments/assets/ad10483b-b4b1-4dcf-ab1e-50d000a63ea5" />
+
 
 ## Features
 
