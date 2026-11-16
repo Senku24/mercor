@@ -1,159 +1,122 @@
-# Turborepo starter
+# GitHub Interview Practice
 
-This Turborepo starter is maintained by the Turborepo core team.
+A voice-based technical interview practice app that uses a candidate’s public GitHub repositories to guide a short interview. After the conversation, it provides a score and feedback based on the candidate’s responses.
 
-## Using this example
+## Screenshots
 
-Run the following command:
+![**Landing page screenshot placeholder**](image.png)
 
-```sh
-npx create-turbo@latest
+> **Interview page screenshot placeholder**  
+> Add `docs/screenshots/interview.png` here.
+
+> **Results page screenshot placeholder**  
+> Add `docs/screenshots/results.png` here.
+
+## Features
+
+- Collects a GitHub profile URL and reads public repository metadata.
+- Runs a one-minute, two-way technical interview over browser audio.
+- Asks questions grounded in the candidate’s repositories.
+- Saves the interview transcript and scores the candidate’s answers.
+- Shows the transcript, score, and feedback on the results page.
+- Uses animated speaking indicators on the interview screen.
+
+## Stack
+
+- **Workspace:** Bun and Turborepo
+- **Frontend:** React, TypeScript, React Router, Tailwind CSS
+- **Backend:** Express, TypeScript, Zod
+- **Database:** PostgreSQL with Prisma ORM
+- **Voice interview:** OpenAI Realtime API over WebRTC
+- **Interview scoring:** OpenAI Responses API
+
+## Requirements
+
+- Bun 1.3.13 or newer
+- Node.js 24 or newer
+- PostgreSQL 15 or newer
+- An OpenAI API key with access to the configured Realtime and scoring models
+
+The browser needs microphone permission. Use `localhost` during development or serve the app over HTTPS.
+
+## Local setup
+
+1. Install dependencies from the repository root:
+
+   ```sh
+   bun install
+   ```
+
+2. Create the backend environment file:
+
+   ```sh
+   cp apps/backend/.env.example apps/backend/.env
+   ```
+
+3. Edit `apps/backend/.env` and set `DATABASE_URL` to a PostgreSQL database and `OPENAI_API_KEY` to your server-side API key. The example also sets the local frontend origin, Realtime model, and scoring model.
+
+   Keep the API key in the backend environment. It is used by the server to create short-lived Realtime credentials and score completed interviews.
+
+4. Apply the database migrations:
+
+   ```sh
+   cd apps/backend
+   bun run migration:apply
+   cd ../..
+   ```
+
+5. Start the frontend and backend from the repository root:
+
+   ```sh
+   bun run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000). The backend listens on port `3001` by default.
+
+The frontend uses `http://localhost:3001` as its default backend URL. To change it, create `apps/frontend/.env` and set `BUN_PUBLIC_BACKEND_URL` to your backend origin.
+
+## Interview flow
+
+1. Enter a GitHub profile URL on the landing page.
+2. The backend collects public repository names, descriptions, and star counts.
+3. Start the voice interview and answer questions about the listed projects.
+4. End the interview or let the one-minute timer expire.
+5. Review the transcript, score, and feedback on the results page.
+
+## Useful commands
+
+Run these from the repository root unless a directory is shown.
+
+| Command | Description |
+| --- | --- |
+| `bun run dev` | Start the frontend and backend in development mode |
+| `bun run check-types` | Type-check the workspace |
+| `bun run build` | Build workspace packages |
+| `bun run lint` | Run workspace lint tasks |
+| `cd apps/backend && bun run migration:status` | Check database migration status |
+| `cd apps/backend && bun run migration:apply` | Apply pending database migrations |
+
+## Project layout
+
+```text
+apps/
+  backend/   Express API, GitHub repository collection, interview sessions, scoring, Prisma schema
+  frontend/  React app, interview UI, WebRTC audio connection, results UI
+packages/
+  ...        Shared workspace configuration and packages
 ```
 
-## What's inside?
+## Configuration
 
-This Turborepo includes the following packages/apps:
+Backend settings are documented in `apps/backend/.env.example`:
 
-### Apps and Packages
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `OPENAI_API_KEY` | Server-side OpenAI API key |
+| `FRONTEND_ORIGIN` | Frontend origin allowed by the backend CORS policy |
+| `REALTIME_MODEL` | Realtime voice interview model |
+| `SCORING_MODEL` | Model used to score interview answers |
+| `PORT` | Backend port; defaults to `3001` |
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo build
-bun exec turbo build
-bun exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-bun exec turbo build --filter=docs
-bun exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-bun exec turbo dev
-bun exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-bun exec turbo dev --filter=web
-bun exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-bun exec turbo login
-bun exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-bun exec turbo link
-bun exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+The interview uses a temporary access token stored in the browser’s `sessionStorage`. The standard OpenAI API key stays on the backend.
