@@ -1,7 +1,8 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { toast } from "sonner";
-import { api } from "../lib/api";
+import { createInterviewApi } from "../lib/api";
 
 type TranscriptMessage = {
   type: "User" | "Assistant";
@@ -21,10 +22,26 @@ export function Result() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api
+    const interviewApi = createInterviewApi(interviewId);
+    if (!interviewApi) {
+      toast.error("This interview session has expired. Start a new interview.");
+      window.location.replace("/");
+      return;
+    }
+    interviewApi
       .get<InterviewResult>(`/api/interviews/${interviewId}`)
       .then(({ data }) => setResult(data))
-      .catch(() => toast.error("Could not load interview results"))
+      .catch((error: unknown) => {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          sessionStorage.removeItem(`interview:${interviewId}`);
+          toast.error(
+            "This interview session has expired. Start a new interview.",
+          );
+          window.location.replace("/");
+          return;
+        }
+        toast.error("Could not load interview results");
+      })
       .finally(() => setLoading(false));
   }, [interviewId]);
 

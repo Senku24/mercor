@@ -12,8 +12,11 @@ export async function scoreInterview(
   repositories: RepoMetadata[],
   transcript: { type: string; message: string }[],
 ) {
-  const transcriptText = transcript
-    .map(({ message }) => message)
+  const candidateResponses = transcript
+    .filter(({ type }) => type === "User")
+    .map(({ message }) => message.trim())
+    .filter(Boolean);
+  const transcriptText = candidateResponses
     .join(" ")
     .trim();
   if (transcriptText.length < MIN_SCORABLE_TRANSCRIPT_CHARACTERS) {
@@ -32,9 +35,12 @@ export async function scoreInterview(
         {
           role: "system",
           content:
-            "Evaluate a one-minute technical interview for technical depth, clarity, and relevance to the candidate's repositories. Return a score from 0 to 100 and concise, evidence-based feedback.",
+            "Evaluate the candidate, not the interviewer. Score only the candidate's spoken responses for technical depth, clarity, and relevance to their repositories. Interviewer speech is excluded from the input. Do not reward the number or quality of interviewer questions. Return a score from 0 to 100 and concise, evidence-based feedback grounded only in the candidate's responses.",
         },
-        { role: "user", content: JSON.stringify({ repositories, transcript }) },
+        {
+          role: "user",
+          content: JSON.stringify({ repositories, candidateResponses }),
+        },
       ],
       text: {
         format: {

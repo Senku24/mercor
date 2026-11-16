@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import { env } from "../config/env";
+import { SIDEBAND_CONNECTION_TIMEOUT_MS } from "../config/env";
 import { z } from "zod";
 import { logger } from "../lib/logger";
 import { interviewRepository } from "../repositories/interview";
@@ -12,13 +13,28 @@ const realtimeEventSchema = z
 
 export class SidebandSession {
   private readonly socket: WebSocket;
+  readonly ready: Promise<void>;
   private messageQueue: Promise<void> = Promise.resolve();
+  private resolveReady!: () => void;
+  private rejectReady!: (error: Error) => void;
+  private readySettled = false;
+  private readonly readyTimer: ReturnType<typeof setTimeout>;
+  private readonly instructions: string;
 
   constructor(
     private readonly interviewId: string,
     callId: string,
     repositories: RepoMetadata[],
   ) {
+    this.instructions = interviewerPrompt(repositories);
+    this.ready = new Promise<void>((resolve, reject) => {
+      this.resolveReady = resolve;
+      this.rejectReady = reject;
+    });
+    this.readyTimer = setTimeout(
+      () => this.failHandshake(new Error("Realtime session update timed out")),
+      SIDEBAND_CONNECTION_TIMEOUT_MS,
+    );
     this.socket = new WebSocket(
       `wss://api.openai.com/v1/realtime?call_id=${encodeURIComponent(callId)}`,
       {
@@ -32,15 +48,18 @@ export class SidebandSession {
           logger.error(this.interviewId, "transcript.save_failed", error);
         });
     });
-    this.socket.on("error", (error) =>
-      logger.error(interviewId, "sideband.error", error),
-    );
+    this.socket.on("error", (error) => {
+      logger.error(interviewId, "sideband.error", error);
+      this.failHandshake(new Error("Realtime sideband connection failed"));
+    });
+    this.socket.on("close", () => {
+      this.failHandshake(new Error("Realtime sideband closed before setup"));
+    });
     this.socket.on("open", () => {
       this.send({
         type: "session.update",
-        session: { instructions: interviewerPrompt(repositories) },
+        session: { type: "realtime", instructions: this.instructions },
       });
-      this.send({ type: "response.create" });
       logger.event(interviewId, "sideband.connected");
     });
   }
@@ -64,6 +83,25 @@ export class SidebandSession {
     }
     const event = parsed.data;
     logger.event(this.interviewId, event.type ?? "sideband.unknown");
+    if (event.type === "error") {
+      this.failHandshake(new Error("Realtime rejected the session update"));
+      return;
+    }
+    if (event.type === "session.updated" && !this.readySettled) {
+      const session = z
+        .object({ instructions: z.string() })
+        .passthrough()
+        .safeParse(event.session);
+      if (!session.success || session.data.instructions !== this.instructions) {
+        this.failHandshake(
+          new Error("GitHub interview instructions were not applied"),
+        );
+        return;
+      }
+      clearTimeout(this.readyTimer);
+      this.readySettled = true;
+      this.resolveReady();
+    }
     const type =
       event.type === "conversation.item.input_audio_transcription.completed"
         ? "User"
@@ -80,7 +118,21 @@ export class SidebandSession {
   }
 
   async close() {
+    clearTimeout(this.readyTimer);
+    this.failHandshake(new Error("Realtime sideband closed"));
     this.socket.close();
     await this.messageQueue;
+  }
+
+  startFirstResponse() {
+    if (!this.readySettled) throw new Error("Realtime session is not ready");
+    this.send({ type: "response.create" });
+  }
+
+  private failHandshake(error: Error) {
+    if (this.readySettled) return;
+    clearTimeout(this.readyTimer);
+    this.readySettled = true;
+    this.rejectReady(error);
   }
 }

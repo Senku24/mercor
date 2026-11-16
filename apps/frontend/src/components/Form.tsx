@@ -15,7 +15,13 @@ export function Form() {
       return;
     }
     try {
-      const { data } = await api.post("/api/pre-interview", { github });
+      const { data } = await api.post<{ id: string; accessToken: string }>(
+        "/api/pre-interview",
+        { github },
+      );
+      if (!data.id || !data.accessToken) {
+        throw new Error("Backend did not return interview credentials");
+      }
       toast.success("GitHub profile loaded");
       sessionStorage.setItem(`interview:${data.id}`, data.accessToken);
       navigate(`/interview/${data.id}`);

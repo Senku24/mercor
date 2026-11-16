@@ -4,7 +4,7 @@ import { useRealtimeInterview } from "../hooks/useRealtimeInterview";
 
 export function Interview() {
   const { interviewId = "" } = useParams<{ interviewId: string }>();
-  const { secondsLeft, evaluating, started, end } =
+  const { secondsLeft, evaluating, started, audioStatus, lastHeard, end } =
     useRealtimeInterview(interviewId);
 
   return (
@@ -16,9 +16,14 @@ export function Interview() {
         <>
           <p>
             {started
-              ? "You are connected. Answer naturally and ask for a question to be repeated if needed."
+              ? `${audioStatus} Answer naturally and ask for a question to be repeated if needed.`
               : "Connecting your microphone and interviewer…"}
           </p>
+          {lastHeard && (
+            <p className="max-w-xl text-sm text-muted-foreground">
+              Heard: {lastHeard}
+            </p>
+          )}
           <p
             className="font-mono text-5xl"
             aria-live="polite"

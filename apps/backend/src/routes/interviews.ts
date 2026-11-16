@@ -10,6 +10,7 @@ import {
   startInterviewSchema,
 } from "../schemas";
 import { requireInterviewToken } from "../middleware/auth";
+import { interviewerPrompt } from "../services/prompt";
 import {
   ACCESS_TOKEN_BYTES,
   MAX_RATE_LIMIT_ENTRIES,
@@ -61,9 +62,9 @@ interviews.post("/pre-interview", async (req, res, next) => {
   }
 });
 
-interviews.use("/:id", requireInterviewToken);
+interviews.use("/interviews/:id", requireInterviewToken);
 
-interviews.post("/:id/token", async (req, res, next) => {
+interviews.post("/interviews/:id/token", async (req, res, next) => {
   const interview = await interviewRepository.find(req.params.id);
   if (!interview || interview.status !== "Pre")
     return res.status(409).json({ error: "Interview is not ready" });
@@ -71,11 +72,14 @@ interviews.post("/:id/token", async (req, res, next) => {
     return res.status(409).json({ error: "Client secret already minted" });
   if (clientSecretJobs.has(interview.id))
     return res.status(409).json({ error: "Client secret is being minted" });
+  const repositories = repoMetadataSchema
+    .array()
+    .parse(interview.githubMetaData);
   const secretJob = (async () => {
     await interviewRepository.update(interview.id, {
       clientSecretIssued: true,
     });
-    return mintClientSecret();
+    return mintClientSecret(interviewerPrompt(repositories));
   })();
   clientSecretJobs.set(interview.id, secretJob);
   try {
@@ -88,7 +92,7 @@ interviews.post("/:id/token", async (req, res, next) => {
   }
 });
 
-interviews.post("/:id/start", async (req, res, next) => {
+interviews.post("/interviews/:id/start", async (req, res, next) => {
   const parsed = startInterviewSchema.safeParse(req.body);
   if (!parsed.success)
     return res.status(400).json({ error: parsed.error.issues });
@@ -104,15 +108,10 @@ interviews.post("/:id/start", async (req, res, next) => {
     return res.status(409).json({ error: "Interview cannot be started" });
   startingInterviews.add(interview.id);
   try {
-    await interviewRepository.update(interview.id, {
-      status: "InProgress",
-      callId: parsed.data.callId,
-      startedAt: new Date(),
-    });
     const repositories = repoMetadataSchema
       .array()
       .parse(interview.githubMetaData);
-    startSession(interview.id, parsed.data.callId, repositories);
+    await startSession(interview.id, parsed.data.callId, repositories);
     return res.status(204).end();
   } catch (error) {
     next(error);
@@ -121,7 +120,7 @@ interviews.post("/:id/start", async (req, res, next) => {
   }
 });
 
-interviews.post("/:id/end", async (req, res, next) => {
+interviews.post("/interviews/:id/end", async (req, res, next) => {
   try {
     await finishInterview(req.params.id);
     const interview = await interviewRepository.find(req.params.id);
@@ -131,7 +130,7 @@ interviews.post("/:id/end", async (req, res, next) => {
   }
 });
 
-interviews.get("/:id", async (req, res, next) => {
+interviews.get("/interviews/:id", async (req, res, next) => {
   try {
     const interview = await interviewRepository.find(req.params.id);
     if (!interview)
