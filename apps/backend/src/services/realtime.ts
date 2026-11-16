@@ -18,7 +18,11 @@ export async function mintClientSecret(instructions: string) {
           input: {
             noise_reduction: { type: "near_field" },
             transcription: { model: "gpt-transcribe" },
-            turn_detection: { type: "server_vad", create_response: true },
+            turn_detection: {
+              type: "server_vad",
+              create_response: false,
+              interrupt_response: true,
+            },
           },
           output: { voice: "alloy", speed: 1.18 },
         },

@@ -18,6 +18,9 @@ export class SidebandSession {
   private resolveReady!: () => void;
   private rejectReady!: (error: Error) => void;
   private readySettled = false;
+  private responseInProgress = false;
+  private responseRequested = false;
+  private responsePending = false;
   private readonly readyTimer: ReturnType<typeof setTimeout>;
   private readonly instructions: string;
 
@@ -84,8 +87,38 @@ export class SidebandSession {
     const event = parsed.data;
     logger.event(this.interviewId, event.type ?? "sideband.unknown");
     if (event.type === "error") {
-      this.failHandshake(new Error("Realtime rejected the session update"));
+      const details = z
+        .object({ code: z.string().optional(), message: z.string().optional() })
+        .passthrough()
+        .safeParse(event.error);
+      const message = details.success ? details.data.message : undefined;
+      if (message?.includes("active response in progress")) {
+        this.responseRequested = false;
+        this.responseInProgress = true;
+        this.responsePending = true;
+        logger.event(this.interviewId, "realtime.response_already_active");
+        return;
+      }
+      this.responseRequested = false;
+      if (!this.readySettled) {
+        this.failHandshake(new Error("Realtime rejected the session update"));
+      } else {
+        logger.error(
+          this.interviewId,
+          "realtime.event_failed",
+          new Error(message ?? "Realtime event failed"),
+        );
+      }
       return;
+    }
+    if (event.type === "response.created") {
+      this.responseRequested = false;
+      this.responseInProgress = true;
+    }
+    if (event.type === "response.done") {
+      this.responseRequested = false;
+      this.responseInProgress = false;
+      if (this.responsePending) this.requestResponse();
     }
     if (event.type === "session.updated" && !this.readySettled) {
       const session = z
@@ -114,6 +147,7 @@ export class SidebandSession {
         type,
         event.transcript.trim(),
       );
+      if (type === "User") this.requestResponse();
     }
   }
 
@@ -126,6 +160,16 @@ export class SidebandSession {
 
   startFirstResponse() {
     if (!this.readySettled) throw new Error("Realtime session is not ready");
+    this.requestResponse();
+  }
+
+  private requestResponse() {
+    if (this.responseInProgress || this.responseRequested) {
+      this.responsePending = true;
+      return;
+    }
+    this.responsePending = false;
+    this.responseRequested = true;
     this.send({ type: "response.create" });
   }
 
