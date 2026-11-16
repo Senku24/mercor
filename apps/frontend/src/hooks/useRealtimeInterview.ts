@@ -21,7 +21,9 @@ function parseRealtimeEvent(value: string) {
       type: typeof type === "string" ? type : null,
       transcript: typeof transcript === "string" ? transcript : null,
       error:
-        typeof error === "object" && error !== null && "message" in error &&
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
         typeof error.message === "string"
           ? error.message
           : null,
@@ -55,6 +57,8 @@ export function useRealtimeInterview(interviewId: string) {
   const [started, setStarted] = useState(false);
   const [audioStatus, setAudioStatus] = useState("Connecting microphone…");
   const [lastHeard, setLastHeard] = useState("");
+  const [userSpeaking, setUserSpeaking] = useState(false);
+  const [interviewerSpeaking, setInterviewerSpeaking] = useState(false);
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const endedRef = useRef(false);
@@ -139,7 +143,9 @@ export function useRealtimeInterview(interviewId: string) {
         peer.addTrack(microphoneTrack, stream);
         peer.onconnectionstatechange = () => {
           if (peer.connectionState === "failed") {
-            setAudioStatus("Audio connection failed. Please restart the interview.");
+            setAudioStatus(
+              "Audio connection failed. Please restart the interview.",
+            );
           }
         };
         outputAudio = document.createElement("audio");
@@ -158,16 +164,29 @@ export function useRealtimeInterview(interviewId: string) {
           setAudioStatus("Microphone connected; speak after the question.");
         events.onclose = () => {
           if (!cancelled && !endedRef.current) {
-            setAudioStatus("Realtime audio connection closed. Restart the interview.");
+            setAudioStatus(
+              "Realtime audio connection closed. Restart the interview.",
+            );
           }
         };
         events.onmessage = (message) => {
           const event = parseRealtimeEvent(String(message.data));
           if (event?.type === "input_audio_buffer.speech_started") {
+            setUserSpeaking(true);
             setAudioStatus("Listening to your answer…");
           }
           if (event?.type === "input_audio_buffer.speech_stopped") {
+            setUserSpeaking(false);
             setAudioStatus("Processing your answer…");
+          }
+          if (event?.type === "output_audio_buffer.started") {
+            setInterviewerSpeaking(true);
+          }
+          if (
+            event?.type === "output_audio_buffer.stopped" ||
+            event?.type === "output_audio_buffer.cleared"
+          ) {
+            setInterviewerSpeaking(false);
           }
           if (event?.type === "input_audio_buffer.committed") {
             setAudioStatus("Answer received; preparing a follow-up…");
@@ -275,5 +294,14 @@ export function useRealtimeInterview(interviewId: string) {
     return () => window.clearInterval(timer);
   }, [end, evaluating, started]);
 
-  return { secondsLeft, evaluating, started, audioStatus, lastHeard, end };
+  return {
+    secondsLeft,
+    evaluating,
+    started,
+    audioStatus,
+    lastHeard,
+    userSpeaking,
+    interviewerSpeaking,
+    end,
+  };
 }

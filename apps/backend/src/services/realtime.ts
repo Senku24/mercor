@@ -20,7 +20,7 @@ export async function mintClientSecret(instructions: string) {
             transcription: { model: "gpt-transcribe" },
             turn_detection: { type: "server_vad", create_response: true },
           },
-          output: { voice: "alloy" },
+          output: { voice: "alloy", speed: 1.18 },
         },
       },
     },
