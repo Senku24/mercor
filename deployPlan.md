@@ -50,6 +50,7 @@ Environment variables:
 | `REALTIME_MODEL` | `gpt-realtime-2.1` | no |
 | `SCORING_MODEL` | `gpt-5-mini` | no |
 | `NODE_VERSION` | `24` | no |
+| `GITHUB_TOKEN` | GitHub personal access token, no scopes (public data only). Without it, `/api/pre-interview` returns 502 on Render because unauthenticated GitHub calls are limited to 60/hour per shared IP | yes |
 
 `PORT` is injected by Render; do not set it.
 Verify once deployed (Render URL first): `curl -i https://<service>.onrender.com/health` → `200 {"status":"ok"}`.
@@ -94,6 +95,7 @@ Expected: health `200`; preflight `204` with `Access-Control-Allow-Origin: https
 | --- | --- |
 | Browser CORS error | `FRONTEND_ORIGIN` must exactly equal `https://mercor.paulnixon.in` (https, no trailing slash); redeploy Render after changing |
 | Blank page or requests to `undefined`/localhost | `BUN_PUBLIC_BACKEND_URL` missing at Pages build time; set it and redeploy |
+| `POST /api/pre-interview` returns 502, Render log shows `AxiosError ... 403` | GitHub rate limit on Render's shared IP; set `GITHUB_TOKEN` |
 | Everyone gets 429 | `TRUST_PROXY` not set to `1` on Render |
 | First request very slow | Render free tier cold start; use Starter |
 | Interview lost mid-session | Render restarted the instance (sessions are in memory); use Starter and a single instance |

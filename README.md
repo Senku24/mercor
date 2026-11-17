@@ -116,6 +116,7 @@ Backend settings are documented in `apps/backend/.env.example`:
 | `DATABASE_URL` | PostgreSQL connection string used by the running API (pooled in production) |
 | `DIRECT_DATABASE_URL` | Direct, non-pooled connection string used only by Prisma migrations |
 | `OPENAI_API_KEY` | Server-side OpenAI API key. Never expose it to the frontend |
+| `GITHUB_TOKEN` | Optional GitHub token (no scopes) for the repository lookup; recommended in production to avoid GitHub's 60/hour per-IP limit |
 | `FRONTEND_ORIGIN` | Single frontend origin allowed by the backend CORS policy |
 | `REALTIME_MODEL` | Realtime voice interview model |
 | `SCORING_MODEL` | Model used to score interview answers |

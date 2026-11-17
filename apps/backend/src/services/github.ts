@@ -2,6 +2,7 @@ import axios from "axios";
 import type { RepoMetadata } from "../repositories/interview";
 import { z } from "zod";
 import {
+  env,
   GITHUB_REPOSITORY_PAGE_SIZE,
   GITHUB_REQUEST_TIMEOUT_MS,
 } from "../config/env";
@@ -21,7 +22,10 @@ export async function scrapeGithubRepos(
     {
       params: { per_page: GITHUB_REPOSITORY_PAGE_SIZE, sort: "updated" },
       timeout: GITHUB_REQUEST_TIMEOUT_MS,
-      headers: { Accept: "application/vnd.github+json" },
+      headers: {
+        Accept: "application/vnd.github+json",
+        ...(env.GITHUB_TOKEN && { Authorization: `Bearer ${env.GITHUB_TOKEN}` }),
+      },
     },
   );
   return z
