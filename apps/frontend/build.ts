@@ -48,6 +48,9 @@ const result = await Bun.build({
   entrypoints,
   outdir,
   root: path.join(projectDir, "src"),
+  // Absolute asset URLs: relative ones break on nested routes like /result/:id,
+  // where the SPA fallback would answer asset requests with index.html.
+  publicPath: "/",
   plugins: [tailwind],
   minify: true,
   target: "browser",

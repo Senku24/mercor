@@ -42,7 +42,7 @@ Environment variables:
 
 | Name | Value | Secret |
 | --- | --- | --- |
-| `DATABASE_URL` | Neon **pooled** connection string (host contains `-pooler`) | yes |
+| `DATABASE_URL` | Neon **direct** connection string (host must NOT contain `-pooler`). Prisma 8's runtime sends a `lc_monetary` startup parameter that Neon's pooler rejects (`CONTRACT.MARKER_READ_FAILED`) | yes |
 | `OPENAI_API_KEY` | server-side OpenAI key | yes |
 | `FRONTEND_ORIGIN` | `https://mercor.paulnixon.in` (no trailing slash) | no |
 | `HOST` | `0.0.0.0` (Render requires this; do not use `127.0.0.1`) | no |
@@ -95,6 +95,7 @@ Expected: health `200`; preflight `204` with `Access-Control-Allow-Origin: https
 | --- | --- |
 | Browser CORS error | `FRONTEND_ORIGIN` must exactly equal `https://mercor.paulnixon.in` (https, no trailing slash); redeploy Render after changing |
 | Blank page or requests to `undefined`/localhost | `BUN_PUBLIC_BACKEND_URL` missing at Pages build time; set it and redeploy |
+| `POST /api/pre-interview` returns 502, log `detail` says `unsupported startup parameter ... lc_monetary` | `DATABASE_URL` is a Neon pooled URL; use the direct URL (no `-pooler`) |
 | `POST /api/pre-interview` returns 502, Render log shows `AxiosError ... 403` | GitHub rate limit on Render's shared IP; set `GITHUB_TOKEN` |
 | Everyone gets 429 | `TRUST_PROXY` not set to `1` on Render |
 | First request very slow | Render free tier cold start; use Starter |
