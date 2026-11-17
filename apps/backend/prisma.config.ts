@@ -8,7 +8,8 @@ export default definePrismaConfig({
   orm: ormConfig({
     contract: "./prisma/contract.prisma",
     db: {
-      connection: process.env["DATABASE_URL"]!,
+      // Migrations use the direct (non-pooled) connection when provided.
+      connection: (process.env["DIRECT_DATABASE_URL"] ?? process.env["DATABASE_URL"])!,
     },
   }),
 });

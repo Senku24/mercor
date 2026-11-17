@@ -6,6 +6,7 @@ const envSchema = z.object({
   FRONTEND_ORIGIN: z.string().url().default("http://localhost:3000"),
   REALTIME_MODEL: z.string().default("gpt-realtime-2.1"),
   SCORING_MODEL: z.string().default("gpt-5-mini"),
+  HOST: z.string().min(1).default("0.0.0.0"),
   PORT: z.coerce.number().int().positive().default(3001),
 });
 

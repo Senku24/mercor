@@ -74,7 +74,7 @@ The browser needs microphone permission. Use `localhost` during development or s
 
    Open [http://localhost:3000](http://localhost:3000). The backend listens on port `3001` by default.
 
-The frontend uses `http://localhost:3001` as its default backend URL. To change it, create `apps/frontend/.env` and set `BUN_PUBLIC_BACKEND_URL` to your backend origin.
+The frontend uses `http://localhost:3001` as its default backend URL in development. To point it elsewhere, create `apps/frontend/.env` and set `BUN_PUBLIC_BACKEND_URL` to your backend origin. Only variables prefixed with `BUN_PUBLIC_` are exposed to the browser.
 
 ## Interview flow
 
@@ -113,11 +113,83 @@ Backend settings are documented in `apps/backend/.env.example`:
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `OPENAI_API_KEY` | Server-side OpenAI API key |
-| `FRONTEND_ORIGIN` | Frontend origin allowed by the backend CORS policy |
+| `DATABASE_URL` | PostgreSQL connection string used by the running API (pooled in production) |
+| `DIRECT_DATABASE_URL` | Direct, non-pooled connection string used only by Prisma migrations |
+| `OPENAI_API_KEY` | Server-side OpenAI API key. Never expose it to the frontend |
+| `FRONTEND_ORIGIN` | Single frontend origin allowed by the backend CORS policy |
 | `REALTIME_MODEL` | Realtime voice interview model |
 | `SCORING_MODEL` | Model used to score interview answers |
+| `HOST` | Interface the API binds to; defaults to `0.0.0.0`, production uses `127.0.0.1` |
 | `PORT` | Backend port; defaults to `3001` |
 
 The interview uses a temporary access token stored in the browser’s `sessionStorage`. The standard OpenAI API key stays on the backend.
+
+Frontend build variable:
+
+| Variable | Purpose |
+| --- | --- |
+| `BUN_PUBLIC_BACKEND_URL` | Public backend origin inlined into the static build. Required for `bun run build`; use `http://localhost:3001` for local static testing |
+
+## Production deployment
+
+Target layout:
+
+- **Frontend:** Cloudflare Pages, `https://interview.paulnixon.in`
+- **Backend:** DigitalOcean droplet running Bun under a process manager, behind Nginx, `https://api-interview.paulnixon.in`
+- **Database:** Neon PostgreSQL
+
+### Frontend (Cloudflare Pages)
+
+| Setting | Value |
+| --- | --- |
+| Root directory | `apps/frontend` |
+| Build command | `bun install && bun run build` |
+| Build output directory | `dist` |
+| Environment variable | `BUN_PUBLIC_BACKEND_URL` = `https://api-interview.paulnixon.in` |
+| Environment variable | `BUN_VERSION` = `1.3.13` (so Pages installs the Bun version the lockfile uses) |
+
+The build fails if `BUN_PUBLIC_BACKEND_URL` is missing, is not an http(s) URL, or if the output does not contain `index.html`. Cloudflare Pages serves `index.html` for unmatched paths, so `/interview/:id` and `/result/:id` work on refresh. Do not add a `404.html`.
+
+To run the static build locally:
+
+```sh
+cd apps/frontend
+BUN_PUBLIC_BACKEND_URL=http://localhost:3001 bun run build
+bunx serve dist   # or any static server; open the printed URL
+```
+
+### Backend (DigitalOcean)
+
+Production environment file (`apps/backend/.env`, never committed):
+
+```sh
+DATABASE_URL="<Neon pooled runtime connection string>"
+DIRECT_DATABASE_URL="<Neon direct connection string, migrations only>"
+OPENAI_API_KEY="<server-side key>"
+FRONTEND_ORIGIN="https://interview.paulnixon.in"
+HOST="127.0.0.1"
+PORT="3001"
+```
+
+- Start with `cd apps/backend && bun index.ts` under a process manager such as systemd.
+- Nginx terminates TLS for `api-interview.paulnixon.in` and proxies to `http://127.0.0.1:3001`. Port 3001 should not be reachable from the internet.
+- `GET /health` returns `200 {"status":"ok"}` for uptime checks.
+
+### Database
+
+- **Neon pooled connection string** (with `-pooler` in the host) goes in `DATABASE_URL` for the running API.
+- **Neon direct connection string** (without `-pooler`) goes in `DIRECT_DATABASE_URL`. Prisma migrations use it, because pooled connections can break schema changes.
+
+Run migrations from a machine with the production env values, not from the droplet's running service:
+
+```sh
+cd apps/backend
+DIRECT_DATABASE_URL="<direct url>" bun run migration:status
+DIRECT_DATABASE_URL="<direct url>" bun run migration:apply
+```
+
+Migrations are not run automatically during deploys.
+
+### Security
+
+`OPENAI_API_KEY` must never be exposed to the frontend. Do not put it in `BUN_PUBLIC_*` variables, Cloudflare Pages build variables that feed the frontend, or any file under `apps/frontend`. The backend is the only place that reads it.
