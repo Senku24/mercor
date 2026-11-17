@@ -3,6 +3,9 @@ import { z } from "zod";
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   OPENAI_API_KEY: z.string().min(1),
+  // Optional. Authenticates GitHub API calls (5000/hour instead of 60/hour per IP).
+  // Needed on shared hosts like Render. A token with no scopes is enough for public repos.
+  GITHUB_TOKEN: z.string().min(1).optional(),
   FRONTEND_ORIGIN: z.string().url().default("http://localhost:3000"),
   REALTIME_MODEL: z.string().default("gpt-realtime-2.1"),
   SCORING_MODEL: z.string().default("gpt-5-mini"),
