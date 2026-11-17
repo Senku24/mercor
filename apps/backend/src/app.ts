@@ -6,8 +6,11 @@ import { logger } from "./lib/logger";
 import { MAX_REQUEST_BODY_BYTES } from "./config/env";
 
 export const app = express();
-// Trust only loopback proxies (the local Nginx in production) for req.ip/protocol.
-app.set("trust proxy", "loopback");
+// Trust only the configured proxy hops for req.ip/protocol (rate limiting keys on req.ip).
+app.set(
+  "trust proxy",
+  /^\d+$/.test(env.TRUST_PROXY) ? Number(env.TRUST_PROXY) : env.TRUST_PROXY,
+);
 app.use(cors({ origin: env.FRONTEND_ORIGIN }));
 app.use(express.json({ limit: MAX_REQUEST_BODY_BYTES }));
 app.get("/health", (_req, res) => {

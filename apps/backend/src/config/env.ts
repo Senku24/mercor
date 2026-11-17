@@ -7,6 +7,8 @@ const envSchema = z.object({
   REALTIME_MODEL: z.string().default("gpt-realtime-2.1"),
   SCORING_MODEL: z.string().default("gpt-5-mini"),
   HOST: z.string().min(1).default("0.0.0.0"),
+  // Express "trust proxy": "loopback" for a local Nginx, or a hop count such as "1" behind a hosted proxy (Render).
+  TRUST_PROXY: z.string().min(1).default("loopback"),
   PORT: z.coerce.number().int().positive().default(3001),
 });
 
