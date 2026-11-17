@@ -113,8 +113,8 @@ Backend settings are documented in `apps/backend/.env.example`:
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string used by the running API (pooled in production) |
-| `DIRECT_DATABASE_URL` | Direct, non-pooled connection string used only by Prisma migrations |
+| `DATABASE_URL` | PostgreSQL connection string used by the running API. On Neon use the **direct** (non-pooled) string, see Database below |
+| `DIRECT_DATABASE_URL` | Optional. Direct connection string used only by Prisma migrations; falls back to `DATABASE_URL` |
 | `OPENAI_API_KEY` | Server-side OpenAI API key. Never expose it to the frontend |
 | `GITHUB_TOKEN` | Optional GitHub token (no scopes) for the repository lookup; recommended in production to avoid GitHub's 60/hour per-IP limit |
 | `FRONTEND_ORIGIN` | Single frontend origin allowed by the backend CORS policy |
@@ -164,8 +164,8 @@ bunx serve dist   # or any static server; open the printed URL
 Production environment file (`apps/backend/.env`, never committed):
 
 ```sh
-DATABASE_URL="<Neon pooled runtime connection string>"
-DIRECT_DATABASE_URL="<Neon direct connection string, migrations only>"
+DATABASE_URL="<Neon direct connection string (no -pooler in the host)>"
+# DIRECT_DATABASE_URL is optional; migrations fall back to DATABASE_URL
 OPENAI_API_KEY="<server-side key>"
 FRONTEND_ORIGIN="https://interview.paulnixon.in"
 HOST="127.0.0.1"
@@ -178,8 +178,8 @@ PORT="3001"
 
 ### Database
 
-- **Neon pooled connection string** (with `-pooler` in the host) goes in `DATABASE_URL` for the running API.
-- **Neon direct connection string** (without `-pooler`) goes in `DIRECT_DATABASE_URL`. Prisma migrations use it, because pooled connections can break schema changes.
+- **Use the Neon direct connection string** (host without `-pooler`) for `DATABASE_URL`. Prisma 8's Postgres runtime sends a `lc_monetary` startup parameter that Neon's pooled endpoint rejects, so pooled URLs fail at runtime with `CONTRACT.MARKER_READ_FAILED` / `unsupported startup parameter in options: lc_monetary`.
+- `DIRECT_DATABASE_URL` is optional. Set it only if you want migrations to use a different connection than the runtime; otherwise migrations use `DATABASE_URL`.
 
 Run migrations from a machine with the production env values, not from the droplet's running service:
 
